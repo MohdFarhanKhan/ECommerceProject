@@ -7,8 +7,15 @@
 //
 
 import UIKit
+import Alamofire
 public let apiURL = "https://stark-spire-93433.herokuapp.com/json"
 typealias downloadComplete = (Bool,String)
+struct Connectivity {
+    static let sharedInstance = NetworkReachabilityManager()!
+    static var isConnectedToInternet:Bool {
+        return self.sharedInstance.isReachable
+    }
+}
 class Tax{
     var taxName = ""
     var taxValue = 0.0
@@ -62,7 +69,7 @@ struct categoryStruct{
     let category : ECategory
     var categoryArray : [categoryStruct]
 }
-struct displayStruct{
+struct DisplayStruct{
     let id : Int
     let pid : Int
     let level : [Int]
@@ -104,5 +111,4 @@ func getProducts(fromProducts: [EProduct])->[Product]{
     }
     return products
 }
-
 

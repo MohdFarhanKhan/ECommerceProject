@@ -138,6 +138,7 @@ class ProductsTableViewController: UITableViewController{
         }
         return cell
     }
+   
     override func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
         if scrollView.isEqual(self.tableView) == false{

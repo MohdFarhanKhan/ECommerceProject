@@ -83,12 +83,10 @@ class TreeTableView: UITableView, UITableViewDataSource,UITableViewDelegate{
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0{
-            print("category")
-            print(mNodes)
+           
              return (mNodes?.count)!
         }
-        print("Ranking")
-         print(rankArray)
+       
         return (rankArray?.count)!
     }
     

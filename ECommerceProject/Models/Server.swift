@@ -33,7 +33,7 @@ class Server{
     private var categoryArray : [[String:AnyObject]] = []
     private var rankingArray : [[String:AnyObject]] = []
     private var finalJSONArray : [categoryStruct] = []
-    private var displayArray : [displayStruct] = []
+    private var displayArray : [DisplayStruct] = []
     init(){
        downloadData()
     }
@@ -53,7 +53,7 @@ class Server{
         let newLevelArray = Array(newLevelArraySlice) as [Int]
         return goToLevel(array: newArray, lvlArray: newLevelArray)
     }
-    func getDisplayCategoryArray(array: [ECategory])->[displayStruct]{
+    func getDisplayCategoryArray(array: [ECategory])->[DisplayStruct]{
         if array.count <= 0{
             return []
         }
@@ -106,7 +106,7 @@ class Server{
         for i in 1...finalJSONArray.count{
             let item = finalJSONArray[i-1]
             let idNo = displayArray.count+1
-            let nodeDisplay : displayStruct = displayStruct(id:idNo , pid: 0, level: [i-1], name: item.category.categoryName!, prCount: (item.category.products?.count)! )
+            let nodeDisplay : DisplayStruct = DisplayStruct(id:idNo , pid: 0, level: [i-1], name: item.category.categoryName!, prCount: (item.category.products?.count)! )
             displayArray.append(nodeDisplay)
             if item.categoryArray.count > 0{
                 setDisplayElement(array: item.categoryArray, level: [i-1], i: idNo)
@@ -182,7 +182,7 @@ class Server{
             let newLevel = level + [k]
             let idNo = displayArray.count+1
             
-            let nodeDisplay : displayStruct = displayStruct(id: idNo, pid: i, level: newLevel, name: item.category.categoryName!, prCount: (item.category.products?.count)!)
+            let nodeDisplay : DisplayStruct = DisplayStruct(id: idNo, pid: i, level: newLevel, name: item.category.categoryName!, prCount: (item.category.products?.count)!)
             displayArray.append(nodeDisplay)
             if item.categoryArray.count > 0{
                 setDisplayElement(array: item.categoryArray, level: newLevel, i: idNo)
@@ -226,6 +226,7 @@ class Server{
         return (viewCount: viewCount, orderCount: orderCount, shareCount: shareCount)
     }
     func downloadData(){
+        
         self.downloadDataFromServer(){isSuccess,error in
             if isSuccess == true{
                 self.saveProductsToLocalStorage()
@@ -235,11 +236,19 @@ class Server{
     }
     private func downloadDataFromServer(completion: @escaping (_ isSuccess: Bool?, _ error: Error?)->()){
          Server.isDataBeingDownloaded = true
+       
          Alamofire.request( URL(string: apiURL)!,
                            method: .get).validate().responseJSON { (response) -> Void in
                             if response.result.error != nil{
                                 completion(false, response.result.error!)
                             }
+                            let errorString = response.result.error?.localizedDescription
+                            if errorString == "The Internet connection appears to be offline."{
+                                completion(false, nil)
+                                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InternetDisconnectedMessage"), object: nil, userInfo: nil)
+                               
+                            }
+                           
                            do {
                                 let dict = try JSONSerialization.jsonObject(with: response.data!, options: []) as! [String:AnyObject]
                                 self.mainJSONArray.removeAll()

@@ -13,7 +13,7 @@ import MBProgressHUD
 @available(iOS 11.0, *)
 
 class ViewController: UIViewController {
-    var displayArray : [displayStruct] = []
+    var displayArray : [DisplayStruct] = []
     var rankingArray : [ERanking] = []
     var categoryDict: ECategory?
     var rankingDict : ERanking?
@@ -26,49 +26,62 @@ class ViewController: UIViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.categoryTapped(notification:)), name: NSNotification.Name(rawValue: "categoryTapped"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.rankingTapped(notification:)), name: NSNotification.Name(rawValue: "rankingTapped"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.InternetDisconnectedMessage), name: NSNotification.Name(rawValue: "InternetDisconnectedMessage"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.downloadDataOnPullToRefresh), name: NSNotification.Name(rawValue: "downloadDataOnPullToRefresh"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didSaveContext), name: .NSManagedObjectContextDidSave, object: nil)
+       CheckNetwork()
+       
         isInternetAwailable = true
-        let reachabilityManager = NetworkReachabilityManager()
         self.title = "Categories"
-        reachabilityManager?.listener = { status in
-            
-            switch status {
-                
-            case .notReachable:
-                print("The network is not reachable")
-                self.isInternetAwailable = false
-                self.internetDisconnected()
-                
-            case .unknown :
-                self.isInternetAwailable = true
-                print("It is unknown whether the network is reachable")
-                self.internetConnected()
-                
-                
-            case .reachable(.ethernetOrWiFi):
-                self.isInternetAwailable = true
-                print("The network is reachable over the WiFi connection")
-                self.internetConnected()
-                
-            case .reachable(.wwan):
-                self.isInternetAwailable = true
-                print("The network is reachable over the WWAN connection")
-                self.internetConnected()
-                
-            }
-        }
-       dataDownloadedFromServer()
+      
+      //
     
     }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
     }
+    func CheckNetwork() {
+        if Connectivity.isConnectedToInternet {
+            print("Connected")
+             dataDownloadedFromServer()
+        } else {
+            print("No Internet")
+            internetDisconnected()
+            do{
+                displayArray.removeAll()
+                rankingArray .removeAll()
+                categoryDict = nil
+                rankingDict = nil
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                let managedContext = appDelegate.persistentContainer.viewContext
+                let request = NSFetchRequest<ECategory>(entityName: "ECategory")
+                let results = try managedContext.fetch(request)
+                displayArray = Server.sharedInstance.getDisplayCategoryArray(array: results)
+                let rankRequest = NSFetchRequest<ERanking>(entityName: "ERanking")
+                rankingArray = try managedContext.fetch(rankRequest)
+               
+                displayData()
+            }
+            catch{
+                print("Error ")
+            }
+        }
+    }
+    
     func internetConnected(){
         if Server.isDataBeingDownloaded == false && Server.isDataDownloaded == false{
             Server.sharedInstance.downloadData()
         }
+    }
+    @objc func InternetDisconnectedMessage(){
+        DispatchQueue.main.async(execute: { () -> Void in
+           
+                MBProgressHUD.hide(for: self.view, animated: true)
+            let alert = UIAlertController(title: "No Internet", message: "Fresh data not downloaded ", preferredStyle: UIAlertControllerStyle.alert)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+        })
     }
     func internetDisconnected(){
         let alert = UIAlertController(title: "No Internet", message: "Fresh data not downloaded ", preferredStyle: UIAlertControllerStyle.alert)

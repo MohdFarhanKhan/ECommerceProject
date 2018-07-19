@@ -17,7 +17,7 @@ class TreeNodeHelper {
         }
         return Static.instance!
     }
-    func getSortedNodes(_ groups: [displayStruct], defaultExpandLevel: Int) -> [TreeNode] {
+    func getSortedNodes(_ groups: [DisplayStruct], defaultExpandLevel: Int) -> [TreeNode] {
         var result: [TreeNode] = []
         let nodes = convetData2Node(groups )
         let rootNodes = getRootNodes(nodes)
@@ -36,7 +36,7 @@ class TreeNodeHelper {
         }
         return result
     }
-    func convetData2Node(_ groups: [displayStruct]) -> [TreeNode] {
+    func convetData2Node(_ groups: [DisplayStruct]) -> [TreeNode] {
         var nodes: [TreeNode] = []
         var node: TreeNode
         var desc: Int?
